@@ -9,3 +9,8 @@ This program comes in 5 main parts: two services for starting ectool and setting
 
 ## Purpose
 This program was made to run on devices running breath linux as the default coreboot firmware that comes with these devices typically seem to either be very aggressive with their fan curves, which leads to incredibly loud noises, or it simply doesn't run the fans fast enough to keep the cpu cool. This aims to make a simple way to run your fans and control their settings on breath devices. 
+
+## Credit for parts
+Google - Ectool and the coreboot firmware
+Breath Linux Project - Script to install ectool quickly
+<adding once I find the user again> - coming up with the service scripts for controlling the fan based on temperature.
