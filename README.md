@@ -12,5 +12,5 @@ This program was made to run on devices running breath linux as the default core
 
 ## Credit for parts
 Google - Ectool and the coreboot firmware <br />
-Breath Linux Project - Script to install ectool quickly <br />
-<adding once I find the user again> - coming up with the service scripts for controlling the fan based on temperature. <br />
+Breath Linux Project - Script to install ectool quickly (https://github.com/cb-linux/breath) <br />
+Paviluf - coming up with the service scripts for controlling the fan based on temperature. (https://github.com/GalliumOS/galliumos-distro/issues/170)<br />
