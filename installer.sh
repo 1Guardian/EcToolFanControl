@@ -6,7 +6,7 @@
 # the fan speeds apart from coreboot.
 # Ectool Build Portion of Script from: Breath Linux
 
-if [ "$1" == "build" ]
+if [ "$1" == "install" ]
 then
 
     set -xe
@@ -44,13 +44,39 @@ then
 
 elif [ "$1" == "clean" ]
 then
+
     rm EcToolControl
     rm -rf ./ec
 
+elif [ "$1" == "build-controller" ]
+then
+
+    g++ ./controller/EcToolControl.cpp -o ./EcToolControl
+
+elif [ "$1" == "build-ec" ]
+then
+
+    set -xe
+    echo "Downloading dependencies..."
+    git clone https://chromium.googlesource.com/chromiumos/platform/ec --depth 1
+    #sed -i -e 's/<libusb.h>/<libusb-1.0\/libusb.h>/g' /tmp/file.txt
+    sudo apt update; sudo apt install git libftdi-dev libusb-dev libusb-1.0-0-dev libncurses5-dev pkgconf g++ lm-sensors -y
+
+    echo "Compiling ectool..."
+    cd ec
+    echo "What board do you have? (You can find this out by finding your 'Board Name' in https://mrchromebox.tech/#devices)"
+    echo
+    read BOARD
+    make BOARD=$BOARD CROSS_COMPILE= HOST_CROSS_COMPILE= build/$BOARD/util/ectool || echo "Compiling error or invalid board supplied."
+
 else
+
     echo "This script is used to compile the Ectool and the Ectool fan controller as well as setup all necessary scripts for usage...."
     echo "Options:"
-    echo "build -> Builds and installs the Ectool Fan Controller"
-    echo "clean -> Cleans the compiled Ectool Fan Controller Installer and cleans the Ectool build directory"
+    echo "install -> Builds and installs the Ectool Fan Controller"
+    echo "build-controller -> Builds the Ectool Fan Controller"
+    echo "build-ec -> Builds Ectool"
+    echo "clean -> Cleans the compiled Ectool Fan Controller and cleans the Ectool build directory"
+
 fi
 
