@@ -15,6 +15,7 @@ options:
 #include <stdio.h>
 #include <stdlib.h>
 #include <vector>
+#include <map>
 #include <regex.h>
 #include <ctype.h>
 #include <unistd.h>
@@ -114,28 +115,31 @@ void ReadFanService(std::string location, std::ifstream& ifs){
     ifs.open(location);
 
     //get relevant lines
-    std::vector<std::string> lines;
+    std::map<std::string, std::string> lines;
     std::string line;
-    int i = 0;
     while (std::getline(ifs, line))
     {
-        if (i == 2 || i == 3 || i == 4) {
-            lines.push_back(line);
+        if (line.find("TEMPS") != std::string::npos) {
+            lines["TEMPS"] = line;
+        }
+        if (line.find("FAN_SPEEDS") != std::string::npos) {
+            lines["FAN_SPEEDS"] = line;
+        }
+        if (line.find("MAX_FAN_SPEED") != std::string::npos) {
+            lines["MAX_FAN_SPEED"] = line;
         }
 
-        if (i == 4) break;
-
-        i++;
+        if (lines.size() >= 3) break;
     }
     
     std::cout << "EcTool Fan Control Service Current Settings: " << std::endl;
     std::cout << "=============================================" << std::endl;
     std::cout << "Current Recognized Temperature Range:" << std::endl;
-    std::cout << lines[0] << std::endl;
+    std::cout << lines["TEMPS"] << std::endl;
     std::cout << "Current Fan Speed Range (Corresponds to temperatures above):" << std::endl;
-    std::cout << lines[1] << std::endl;
+    std::cout << lines["FAN_SPEEDS"] << std::endl;
     std::cout << "Current Maximum Fan Speed:" << std::endl;
-    std::cout << lines[2] << std::endl;
+    std::cout << lines["MAX_FAN_SPEED"] << std::endl;
 
     ifs.close();
 }
@@ -216,11 +220,11 @@ void setFanSpeeds(std::string location, std::ifstream& ifs){
         ifs.open(location);
         while (std::getline(ifs, line))
         {
-            if (i == 2) {
+            if (line.find("TEMPS") != std::string::npos) {
                 writeBack += temps + "\n";
             }
 
-            else if (i == 3){
+            else if (line.find("FAN_SPEEDS") != std::string::npos){
                 writeBack += speeds + "\n";
             }
 
@@ -268,7 +272,7 @@ int main(int argc, char *argv[])
 
     //Handle Command Line Switches
     int opt;
-    while ((opt = getopt(argc, argv, ":hrsul")) != -1) {
+    while ((opt = getopt(argc, argv, ":hrsul")) != -2) {
         switch (opt) {
 
         case 'h':
@@ -299,6 +303,10 @@ int main(int argc, char *argv[])
         case '?':
             std::cout << "Invalid switch supplied. Terminating." << std::endl;
             exit(0);
+            break;
+
+        default:
+            printHelp();
             break;
         }
     }
