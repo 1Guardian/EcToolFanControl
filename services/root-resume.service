@@ -1,0 +1,11 @@
+# tee "/etc/systemd/system/root-resume.service" << 'EOF'
+# /etc/systemd/system/root-resume.service
+[Unit]
+Description=Local system resume actions
+After=suspend.target
+[Service]
+Type=oneshot
+ExecStart=/bin/systemctl restart fan.timer
+[Install]
+WantedBy=suspend.target
+EOF

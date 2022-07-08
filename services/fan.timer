@@ -1,0 +1,10 @@
+# tee "/etc/systemd/system/fan.timer" << 'EOF'
+# /etc/systemd/system/fan.timer
+[Unit]
+Description=Set fan rpm timer
+[Timer]
+OnUnitActiveSec=5s
+OnBootSec=5s
+[Install]
+WantedBy=timers.target
+EOF
