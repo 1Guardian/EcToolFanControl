@@ -6,6 +6,9 @@
 # the fan speeds apart from coreboot.
 # Ectool Build Portion of Script from: Breath Linux
 
+#MAX FANSPEED SET
+#sudo ectool fanduty 100 && sudo ectool pwmgetfanrpm | grep -o '[0-9]*' | awk '$1>0'
+
 if [ "$1" == "install" ]
 then
 
@@ -25,6 +28,13 @@ then
     #Building ectool
     cp build/$BOARD/util/ectool /usr/bin/ectool
     cd ..
+
+    #configure the maximum fan speed
+    echo "Setting fan(s) to 100% to get maximum rpm approximation for configuration file"
+    sudo ectool fanduty 100 
+    sleep 1
+    MAX_RPM=`sudo ectool pwmgetfanrpm | grep -o '[0-9]*' | awk '$1>0'`
+    sed -i "5s/.*/MAX_FAN_SPEED=$MAX_RPM/" ./scripts/chromebook-fan-control.sh
 
     #building the configuration utility
     g++ ./controller/EcToolControl.cpp -o ./EcToolControl
