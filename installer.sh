@@ -37,7 +37,7 @@ then
     sed -i "5s/.*/MAX_FAN_SPEED=$MAX_RPM/" ./scripts/chromebook-fan-control.sh
 
     #building the configuration utility
-    g++ ./controller/EcToolControl.cpp -o ./EcToolControl
+    g++ -std=c++11 ./controller/EcToolControl.cpp ./controller/configManipulation.hpp ./controller/installManipulation.hpp ./controller/directories.h -o ./EcToolControl
     cp EcToolControl /usr/bin/EcToolControl
 
     #setting up the services and timers
