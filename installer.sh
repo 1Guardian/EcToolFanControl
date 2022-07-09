@@ -61,7 +61,7 @@ then
 elif [ "$1" == "build-controller" ]
 then
 
-    g++ ./controller/EcToolControl.cpp -o ./EcToolControl
+    g++ -std=c++11 ./controller/EcToolControl.cpp ./controller/configManipulation.hpp ./controller/installManipulation.hpp ./controller/directories.h -o ./EcToolControl
 
 elif [ "$1" == "build-ec" ]
 then
