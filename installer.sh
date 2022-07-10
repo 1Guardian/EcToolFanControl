@@ -58,9 +58,8 @@ setupServices(){
 if [ "$1" == "install" ]
 then
 
-    buildEctool
-
     #Building ectool
+    buildEctool
     cp build/$BOARD/util/ectool /usr/bin/ectool
     cd ..
 
