@@ -74,6 +74,7 @@ int main(int argc, char *argv[])
 
     //Handle Command Line Switches
     int opt;
+    std::string readValues = "";
     while ((opt = getopt(argc, argv, ":hrsul")) != -2) {
         switch (opt) {
 
@@ -82,7 +83,8 @@ int main(int argc, char *argv[])
             break;
 
         case 'r':
-            ReadFanService(chromebook_fan_control_script_location, ifs);
+            ReadFanService(chromebook_fan_control_script_location, ifs, &readValues);
+            std::cout << readValues;
             exit(0);
 
         case 's':
