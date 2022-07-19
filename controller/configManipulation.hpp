@@ -14,7 +14,31 @@
 #include <fstream>
 #include <iterator>
 #include <set>
+#include <cstdlib>
 #include <sstream>
+
+
+/**************************************************************************************************************************
+void showHeader(std::string oldValues, std::string currentTemps, std::string currentSpeeds)
+
+    Function used to show the informational header and clear the screen for ease of reading
+
+**************************************************************************************************************************/
+void showHeader(std::string oldValues, std::string currentTemps, std::string currentSpeeds){
+    std::system("clear");
+    std::cout << oldValues << std::endl << std::endl;
+
+    //check to see if we need to display current speeds
+    if (currentTemps != ""){
+        std::cout << "CURRENTLY ENTERED TEMPERATURES:" << currentTemps << std::endl; 
+    }
+    if (currentSpeeds != ""){
+        std::cout << "CURRENTLY ENTERED FAN SPEEDS:" << currentSpeeds << std::endl; 
+    }
+    if (currentTemps != "" || currentSpeeds != ""){
+        std::cout << std::endl;
+    }
+}
 
 /**************************************************************************************************************************
 void safeCin(int* target)
@@ -40,13 +64,13 @@ void safeCin(int* target){
 }
 
 /**************************************************************************************************************************
-void ReadFanService()
+void ReadFanService(std::string location, std::ifstream& ifs, std::string* returnString)
 
     Function used to print the information related to the fan control service and how it will adjust the fans
     when in use.
 
 **************************************************************************************************************************/
-void ReadFanService(std::string location, std::ifstream& ifs){
+void ReadFanService(std::string location, std::ifstream& ifs, std::string* returnString){
 
     ifs.open(location);
 
@@ -68,20 +92,20 @@ void ReadFanService(std::string location, std::ifstream& ifs){
         if (lines.size() >= 3) break;
     }
     
-    std::cout << "EcTool Fan Control Service Current Settings: " << std::endl;
-    std::cout << "=============================================" << std::endl;
-    std::cout << "Current Recognized Temperature Range:" << std::endl;
-    std::cout << lines["TEMPS"] << std::endl;
-    std::cout << "Current Fan Speed Range (Corresponds to temperatures above):" << std::endl;
-    std::cout << lines["FAN_SPEEDS"] << std::endl;
-    std::cout << "Current Maximum Fan Speed:" << std::endl;
-    std::cout << lines["MAX_FAN_SPEED"] << std::endl;
+    *returnString += "EcTool Fan Control Service Current Settings: \n";
+    *returnString += "=============================================\n";
+    *returnString += "Current Recognized Temperature Range:\n";
+    *returnString += lines["TEMPS"] + "\n";
+    *returnString += "Current Fan Speed Range (Corresponds to temperatures above):\n";
+    *returnString += lines["FAN_SPEEDS"] + "\n";
+    *returnString += "Current Maximum Fan Speed:\n";
+    *returnString += lines["MAX_FAN_SPEED"] + "\n";
 
     ifs.close();
 }
 
 /**************************************************************************************************************************
-void setFanSpeeds()
+void setFanSpeeds(std::string location, std::ifstream& ifs)
 
     Function used to set the fan speeds and temperature limitations
 
@@ -92,11 +116,15 @@ void setFanSpeeds(std::string location, std::ifstream& ifs){
     char check = 'N';
     std::vector<int> temperatures;
     std::vector<int> fanSpeeds;
+    std::string previouslyReadValues = "";
+    std::string enteredTemperatures = "";
+    std::string enteredFanSpeeds = "";
 
     //show old values
     std::cout << "Beginning Process to set new fan values:\n " << std::endl;
     std::cout << "Old Values:" << std::endl;
-    ReadFanService(location, ifs);
+    ReadFanService(location, ifs, &previouslyReadValues);
+    std::cout << previouslyReadValues << std::endl;
     std::cout << std::endl;
 
     //offer option to use list notation
@@ -105,6 +133,7 @@ void setFanSpeeds(std::string location, std::ifstream& ifs){
     (std::cin >> option).get();
     if (option != 'l'){
 
+        showHeader(previouslyReadValues, enteredTemperatures, enteredFanSpeeds);
         std::cout << "\nEntering values individually\n" << std::endl;
 
         std::cout << "!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!" << std::endl;
@@ -117,6 +146,7 @@ void setFanSpeeds(std::string location, std::ifstream& ifs){
         std::cout << "How many individual temperature thresholds would you like to set?" << std::endl;
         safeCin(&range);
         while(range < 3){
+            showHeader(previouslyReadValues, enteredTemperatures, enteredFanSpeeds);
             std::cout << "\n!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!" << std::endl;
             std::cout << "You must set at least 3 ranges for the fan speeds" << std::endl;
             std::cout << "!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!\n" << std::endl;
@@ -126,9 +156,11 @@ void setFanSpeeds(std::string location, std::ifstream& ifs){
 
         //take in new values
         while(i < range){
+            showHeader(previouslyReadValues, enteredTemperatures, enteredFanSpeeds);
             std::cout << "Enter a temperature to adjust the fan curve when reached:" << std::endl;
             safeCin(&a);
             while (a <= p){
+                showHeader(previouslyReadValues, enteredTemperatures, enteredFanSpeeds);
                 std::cout << "\n!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!" << std::endl;
                 std::cout << "Next temperature in the set must be larger than the previous" << std::endl;
                 std::cout << "!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!\n" << std::endl;
@@ -137,10 +169,13 @@ void setFanSpeeds(std::string location, std::ifstream& ifs){
             }
             p = a;
             temperatures.push_back(a);
+            enteredTemperatures += " " + std::to_string(a);
 
+            showHeader(previouslyReadValues, enteredTemperatures, enteredFanSpeeds);
             std::cout << "Enter a fan speed to set the fan curve to when provided temperature threshold is reached:" << std::endl;
             safeCin(&a);
             while (a <= t){
+                showHeader(previouslyReadValues, enteredTemperatures, enteredFanSpeeds);
                 std::cout << "\n!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!" << std::endl;
                 std::cout << "Next fanspeed in the set must be larger than the previous" << std::endl;
                 std::cout << "!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!\n" << std::endl;
@@ -149,6 +184,7 @@ void setFanSpeeds(std::string location, std::ifstream& ifs){
             }
             t = a;
             fanSpeeds.push_back(a);
+            enteredFanSpeeds += " " + std::to_string(a);
             i++;
         }
     }
@@ -156,6 +192,7 @@ void setFanSpeeds(std::string location, std::ifstream& ifs){
 
         bool safe = false;
 
+        showHeader(previouslyReadValues, enteredTemperatures, enteredFanSpeeds);
         std::cout << "\nEntering values in list order.....\n" << std::endl;
 
         //take in temperature threshold list
@@ -213,6 +250,7 @@ void setFanSpeeds(std::string location, std::ifstream& ifs){
             (temperatures.size() < 3) ? false : safe;
             
             if (!safe){
+                showHeader(previouslyReadValues, enteredTemperatures, enteredFanSpeeds);
                 std::cout << "\n!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!" << std::endl; 
                 std::cout << "Entered Numbers must be in increasing order, and must be in a safe range (below 90 degrees)" << std::endl; 
                 std::cout << "!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!\n" << std::endl; 
@@ -222,6 +260,7 @@ void setFanSpeeds(std::string location, std::ifstream& ifs){
                 //set values to equal global vector
                 for (std::vector<std::string>::iterator it = localTemperatures.begin(); it != localTemperatures.end(); ++it) {
                     temperatures.push_back(stoi(*it));
+                    enteredTemperatures += " " + *it;
                 }
             }
         }
@@ -233,7 +272,8 @@ void setFanSpeeds(std::string location, std::ifstream& ifs){
         while (!safe){
 
             safe = true;
-        
+
+            showHeader(previouslyReadValues, enteredTemperatures, enteredFanSpeeds);
             std::cout << "!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!" << std::endl;
             std::cout << "RULES: The entered fan speeds must be in increasing order" << std::endl;
             std::cout << "!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!" << std::endl;
@@ -282,6 +322,7 @@ void setFanSpeeds(std::string location, std::ifstream& ifs){
             //TODO 
             
             if (!safe){
+                showHeader(previouslyReadValues, enteredTemperatures, enteredFanSpeeds);
                 std::cout << "\n!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!" << std::endl; 
                 std::cout << "Entered Numbers must be in increasing order, and must be below the maximum RPM of your cpu fan" << std::endl; 
                 std::cout << "!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!\n" << std::endl; 
@@ -291,12 +332,14 @@ void setFanSpeeds(std::string location, std::ifstream& ifs){
                 //set values to equal global vector
                 for (std::vector<std::string>::iterator it = checkFanSpeeds.begin(); it != checkFanSpeeds.end(); ++it) {
                     fanSpeeds.push_back(stoi(*it));
+                    enteredFanSpeeds += " " + *it;
                 }
             }
         }
     }
 
     //show entered values for confirmation
+    showHeader(previouslyReadValues, enteredTemperatures, enteredFanSpeeds);
     std::cout << "\nYour new range of temperatures is: \n";
     std::string temps = "TEMPS=(";
     for(int i = 0; i < temperatures.size(); i++)
