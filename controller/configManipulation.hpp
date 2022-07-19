@@ -17,6 +17,29 @@
 #include <sstream>
 
 /**************************************************************************************************************************
+void safeCin(int* target)
+
+    Function used to streamline the flow of cin statements, particularly in the case where a non-numerical value could be
+    entered. 
+
+**************************************************************************************************************************/
+void safeCin(int* target){
+
+    //take in value into string
+    std::string input = "";
+    (std::cin >> input).get();
+
+    //check if input can become an int
+    try{
+        *target = stoi(input);
+    }
+    catch(...){
+        *target = -1;
+    }
+
+}
+
+/**************************************************************************************************************************
 void ReadFanService()
 
     Function used to print the information related to the fan control service and how it will adjust the fans
@@ -79,7 +102,7 @@ void setFanSpeeds(std::string location, std::ifstream& ifs){
     //offer option to use list notation
     std::cout << "Would you like to enter your values in a [l]ist (40, 45, 50, 60, 75, 80) all at once, or [i]ndividually one by one? (l/i):" << std::endl;
     char option = 'i';
-    std::cin >> option;
+    (std::cin >> option).get();
     if (option != 'l'){
 
         std::cout << "\nEntering values individually\n" << std::endl;
@@ -92,37 +115,37 @@ void setFanSpeeds(std::string location, std::ifstream& ifs){
         std::cout << "!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!\n" << std::endl;
 
         std::cout << "How many individual temperature thresholds would you like to set?" << std::endl;
-        std::cin >> range;
+        safeCin(&range);
         while(range < 3){
             std::cout << "\n!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!" << std::endl;
             std::cout << "You must set at least 3 ranges for the fan speeds" << std::endl;
             std::cout << "!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!\n" << std::endl;
             std::cout << "How many individual temperature thresholds would you like to set?" << std::endl;
-            std::cin >> range;
+            safeCin(&range);
         }
 
         //take in new values
         while(i < range){
             std::cout << "Enter a temperature to adjust the fan curve when reached:" << std::endl;
-            std::cin >> a;
+            safeCin(&a);
             while (a <= p){
                 std::cout << "\n!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!" << std::endl;
                 std::cout << "Next temperature in the set must be larger than the previous" << std::endl;
                 std::cout << "!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!\n" << std::endl;
                 std::cout << "Enter a temperature to adjust the fan curve when reached:" << std::endl;
-                std::cin >> a;
+                safeCin(&a);
             }
             p = a;
             temperatures.push_back(a);
 
             std::cout << "Enter a fan speed to set the fan curve to when provided temperature threshold is reached:" << std::endl;
-            std::cin >> a;
+            safeCin(&a);
             while (a <= t){
                 std::cout << "\n!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!" << std::endl;
                 std::cout << "Next fanspeed in the set must be larger than the previous" << std::endl;
                 std::cout << "!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!\n" << std::endl;
                 std::cout << "Enter a fan speed to set the fan curve to when provided temperature threshold is reached:" << std::endl;
-                std::cin >> a;
+                safeCin(&a);
             }
             t = a;
             fanSpeeds.push_back(a);
@@ -149,7 +172,6 @@ void setFanSpeeds(std::string location, std::ifstream& ifs){
             std::cout << "\nPlease enter a list of temperatures separated by whitespace at which you would like your fans to increase in speed" << std::endl;
             std::cout << "Example: 30 40 50 60 70 80" << std::endl;
             std::string tempRange = "";
-            std::cin.ignore();
             std::getline(std::cin, tempRange);
 
             std::stringstream inputTemperatureStream(tempRange);
@@ -158,13 +180,33 @@ void setFanSpeeds(std::string location, std::ifstream& ifs){
             while(inputTemperatureStream >> temper) localTemperatures.push_back(temper);
 
             int previous = -1;
+            int current = -1;
             for (std::vector<std::string>::iterator it = localTemperatures.begin(); it != localTemperatures.end(); ++it) {
                 if (previous > 0){
-                    if (stoi(*it) <= previous || stoi(*it) >= 90){
+
+                    //expect bad values
+                    try{
+                        current = stoi(*it);
+                    }
+                    catch(...){
+                        safe = false;
+                        break;
+                    }
+
+                    //check for increase, and safe upper bound
+                    if (current <= previous || current >= 90){
                         safe = false;
                     }
                 }
-                previous = stoi(*it);
+                
+                //set previous
+                try{
+                    previous = stoi(*it);
+                }
+                catch(...){
+                    safe = false;
+                    break;
+                }
             }
 
             //keep 3 setting limit
@@ -198,8 +240,8 @@ void setFanSpeeds(std::string location, std::ifstream& ifs){
             std::cout << "\nPlease enter a list of fan speeds (rpm) separated by whitespace that corresponds to the temperature theshold limits you entered above" << std::endl;
             std::cout << "Example: 2400 2600 3000 3500 4500 5000" << std::endl;
             std::string fanRange = "";
-            std::cin.ignore();
             std::getline(std::cin, fanRange);
+            std::cout << fanRange;
 
             std::stringstream inputFanStream(fanRange);
             std::string speedFan = "";
@@ -207,13 +249,33 @@ void setFanSpeeds(std::string location, std::ifstream& ifs){
             while(inputFanStream >> speedFan) checkFanSpeeds.push_back(speedFan);
 
             int previous = -1;
+            int current = -1;
             for (std::vector<std::string>::iterator it = checkFanSpeeds.begin(); it != checkFanSpeeds.end(); ++it) {
                 if (previous > 0){
-                    if (stoi(*it) <= previous){
-                        safe = false;
+
+                    //expect bad values
+                    try{
+                        current = stoi(*it);
                     }
+                    catch(...){
+                        safe = false;
+                        break;
+                    }
+
+                    //check for increase
+                    if (current <= previous){
+                            safe = false;
+                        }
                 }
-                previous = stoi(*it);
+
+                //set previous
+                try{
+                    previous = stoi(*it);
+                }
+                catch(...){
+                    safe = false;
+                    break;
+                }
             }
 
             //check for same size
@@ -232,10 +294,6 @@ void setFanSpeeds(std::string location, std::ifstream& ifs){
                 }
             }
         }
-
-        exit(0);
-
-
     }
 
     //show entered values for confirmation
@@ -254,7 +312,7 @@ void setFanSpeeds(std::string location, std::ifstream& ifs){
     std::cout << speeds;
 
     std::cout << "\nIs this correct? (y/N): ";
-    std::cin >> check;
+    (std::cin >> check).get();
     if(check == 'y' || check == 'Y'){
 
         //build new lines
